@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: ig-stamp-card-prototype
+    env: python
+    plan: free
+
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+    startCommand: |
+      gunicorn app:app --bind 0.0.0.0:$PORT
+
+    envVars:
+      - key: GRAPH_API_VERSION
+        value: v23.0
+
+      # Instagram / Meta
+      - key: IG_BUSINESS_ID
+        sync: false   # set in Render dashboard
+      - key: IG_TOKEN
+        sync: false   # set in Render dashboard
+      - key: VERIFY_TOKEN
+        sync: false   # must match your webhook verify token in Meta
+      - key: WEBHOOK_APP_SECRET
+        sync: false   # optional, set if you want signature verification
+
+      # Supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      # Dashboard / misc
+      - key: DASHBOARD_URL
+        value: https://ndrsndbk.github.io/stamp-card-dashboard/
