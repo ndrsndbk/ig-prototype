@@ -1,0 +1,11 @@
+Flask==3.0.3
+gunicorn==23.0.0
+
+# HTTP client
+requests==2.32.3
+
+# Supabase client
+supabase-py==2.4.0
+
+# For type hints (optional, but nice)
+typing-extensions==4.12.2
