@@ -13,7 +13,8 @@ from flask import Flask, request
 # -------------------------------------------------------------------
 GRAPH_API_VERSION = os.getenv("GRAPH_API_VERSION", "v23.0")
 
-IG_BUSINESS_ID = os.getenv("IG_BUSINESS_ID", "")
+IG_BUSINESS_ID = os.getenv("IG_BUSINESS_ID", "")  # still useful for logging if needed
+PAGE_ID = os.getenv("PAGE_ID", "")                # <-- NEW: Facebook Page ID
 IG_TOKEN = os.getenv("IG_TOKEN", "")
 VERIFY_TOKEN = os.getenv("VERIFY_TOKEN", "myverifytoken")
 WEBHOOK_APP_SECRET = os.getenv("WEBHOOK_APP_SECRET", "")
@@ -33,6 +34,7 @@ def env_diagnostics() -> None:
     print("\n🔍 ENV DIAGNOSTICS (on boot)")
     print("-------------------------------------------")
     print(f"IG_BUSINESS_ID loaded:        {bool(IG_BUSINESS_ID)}")
+    print(f"PAGE_ID loaded:               {bool(PAGE_ID)}")
     print(f"IG_TOKEN loaded:              {bool(IG_TOKEN)}")
     print(f"VERIFY_TOKEN loaded:          {bool(VERIFY_TOKEN)}")
     print(f"SUPABASE_URL loaded:          {bool(SUPABASE_URL)}")
@@ -172,11 +174,17 @@ def get_and_update_streak(customer_id: str) -> Tuple[int, bool, bool]:
 # -------------------------------------------------------------------
 
 def send_instagram_message(payload: Dict[str, Any]) -> None:
-    if not IG_BUSINESS_ID or not IG_TOKEN:
-        print("⚠️ Missing IG_BUSINESS_ID or IG_TOKEN.")
+    """
+    Sends a message via the Page's /messages endpoint.
+
+    We MUST use PAGE_ID here (not IG_BUSINESS_ID) with a Page Access Token
+    that has instagram_manage_messages + pages_messaging, etc.
+    """
+    if not PAGE_ID or not IG_TOKEN:
+        print("⚠️ Missing PAGE_ID or IG_TOKEN.")
         return
 
-    url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{IG_BUSINESS_ID}/messages"
+    url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{PAGE_ID}/messages"
     headers = {
         "Authorization": f"Bearer {IG_TOKEN}",
         "Content-Type": "application/json",
@@ -216,7 +224,7 @@ def send_ig_image(to_ig_user_id: str, image_url: str, caption: str = "") -> None
     }
     if caption:
         # IG DM doesn't support separate "caption" field in the same way as FB,
-        # but we can just send a follow-up text.
+        # so we send image, then a follow-up text.
         send_instagram_message(payload)
         send_ig_text(to_ig_user_id, caption)
     else:
