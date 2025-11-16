@@ -310,9 +310,15 @@ def webhook():
         msg = event.get("message") or {}
         if not ig_user_id or not msg:
             continue
-
+    
+        # 🔹 Ignore our own outgoing messages (echoes from Instagram)
+        if msg.get("is_echo"):
+            print("Skipping echo message from IG:", msg.get("mid"))
+            continue
+    
         text = (msg.get("text") or "").strip()
         text_upper = text.upper()
+
 
         # ---------------- SIGNUP ----------------
         if text_upper == "SIGNUP":
