@@ -8,6 +8,8 @@ from typing import Optional, Dict, Any, Tuple
 import requests
 from flask import Flask, request
 
+RECENT_MESSAGE_MIDS = set()
+
 # -------------------------------------------------------------------
 # ENV VARS
 # -------------------------------------------------------------------
@@ -311,13 +313,25 @@ def webhook():
         if not ig_user_id or not msg:
             continue
     
-        # 🔹 Ignore our own outgoing messages (echoes from Instagram)
+        # Ignore our own outgoing messages
         if msg.get("is_echo"):
             print("Skipping echo message from IG:", msg.get("mid"))
             continue
     
+        mid = msg.get("mid")
+        if mid:
+            if mid in RECENT_MESSAGE_MIDS:
+                print("Skipping duplicate incoming mid:", mid)
+                continue
+            RECENT_MESSAGE_MIDS.add(mid)
+            # keep the set from growing forever
+            if len(RECENT_MESSAGE_MIDS) > 1000:
+                RECENT_MESSAGE_MIDS.clear()
+    
         text = (msg.get("text") or "").strip()
         text_upper = text.upper()
+        
+
 
 
         # ---------------- SIGNUP ----------------
